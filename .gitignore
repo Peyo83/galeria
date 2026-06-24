@@ -1,0 +1,43 @@
+# === Variables de Entorno y Secretos ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# === Base de datos y Persistencia Local ===
+# Si en algún momento decides usar un Bind Mount en lugar de un volumen nombrado
+.docker-data/
+postgres_data/
+
+# === Python (FastAPI, Generador de carga, Consumidor) ===
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory/
+.pytest_cache/
+.mypy_cache/
+
+# === Frontend (Vue 3 + TypeScript + Vite) ===
+node_modules/
+dist/
+dist-ssr/
+*.local
+.nx/
+.cache/
+
+# === Sistema Operativo e IDEs ===
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+.DS_Store
+Thumbs.db
