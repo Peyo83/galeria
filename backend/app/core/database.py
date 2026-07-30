@@ -1,17 +1,17 @@
-# backend/app/core/database.py
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.config import settings
 
-# Motor asíncrono configurado para lidiar con altas cargas I/O sin bloquear hilos
+# Motor asíncrono optimizado para alta concurrencia sin bloqueo del bucle de eventos
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     future=True,
     pool_size=20,
     max_overflow=10,
-    pool_pre_ping=True
+    pool_pre_ping=True  # Prueba la vitalidad de la conexión (SELECT 1) antes de cada checkout del pool
 )
 
 async_session_maker = sessionmaker(
@@ -20,7 +20,7 @@ async_session_maker = sessionmaker(
     expire_on_commit=False
 )
 
-async def get_db() -> AsyncSession:
-    """Dependency Provider para inyectar la sesión asíncrona en los endpoints."""
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Dependency Provider asíncrono que inyecta la sesión transaccional en los controladores de FastAPI."""
     async with async_session_maker() as session:
         yield session

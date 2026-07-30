@@ -1,16 +1,22 @@
-# === Variables de Entorno y Secretos ===
+# =============================================================================
+# 1. VARIABLES DE ENTORNO Y SECRETOS (CRÍTICO)
+# =============================================================================
 .env
 .env.*
 !.env.example
 *.pem
 *.key
 
-# === Base de datos y Persistencia Local ===
-# Si en algún momento decides usar un Bind Mount en lugar de un volumen nombrado
+# =============================================================================
+# 2. BASE DE DATOS Y PERSISTENCIA LOCAL (INFRAESTRUCTURA)
+# =============================================================================
 .docker-data/
 postgres_data/
+automation/n8n_data/
 
-# === Python (FastAPI, Generador de carga, Consumidor) ===
+# =============================================================================
+# 3. BACKEND (FASTAPI, AGENTE IA & PIPELINE DE STREAMING)
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,15 +29,21 @@ pip-delete-this-directory/
 .pytest_cache/
 .mypy_cache/
 
-# === Frontend (Vue 3 + TypeScript + Vite) ===
+# =============================================================================
+# 4. FRONTEND (NUXT 3 + TYPESCRIPT)
+# =============================================================================
 node_modules/
+.nuxt/
+.output/
+.nitro/
 dist/
 dist-ssr/
-*.local
-.nx/
 .cache/
+*.local
 
-# === Sistema Operativo e IDEs ===
+# =============================================================================
+# 5. ENTORNO DE DESARROLLO Y SISTEMA OPERATIVO
+# =============================================================================
 .idea/
 .vscode/
 *.suo
