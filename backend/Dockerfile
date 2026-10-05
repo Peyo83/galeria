@@ -23,6 +23,7 @@ COPY --from=builder /root/.local /root/.local
 COPY . /app
 
 ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000

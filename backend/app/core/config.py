@@ -1,5 +1,6 @@
-from pydantic import Field, computed_field
+from pydantic import computed_field, ConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -8,25 +9,30 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    PROJECT_NAME: str = "Galería de Arte API"
-    VERSION: str = "1.0.0"
-    API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str
+    VERSION: str
+    API_V1_STR: str
 
     # Infraestructura PostgreSQL
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
-    POSTGRES_PORT: int  # Mapeado en Host, pero ignorado internamente para inter-conectividad
+    POSTGRES_PORT: int
     
-    # Credenciales del ecosistema de Inteligencia Artificial
-    OPENAI_API_KEY: str
-    GEMINI_API_KEY: str
+    # Autenticación JWT Admin
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    # Network & Security (CORS)
+    CORS_ORIGINS: List[str]
+
+    model_config = ConfigDict(env_file=".env", extra="ignore")
 
     @computed_field
     @property
     def DATABASE_URL(self) -> str:
-        """Construye dinámicamente el DSN asíncrono apuntando al puerto de la interfaz de red interna de Docker."""
-        # Forzamos 5432 porque el backend se comunica directo en la subnet de Docker, no a través del puerto expuesto del Host.
+        """DSN asíncrono hacia el contenedor galeria_db en la red interna de Docker."""
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@galeria_db:5432/{self.POSTGRES_DB}"
 
 settings = Settings()

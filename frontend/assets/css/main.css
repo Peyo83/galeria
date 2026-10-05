@@ -1,0 +1,10 @@
+body {
+  background-color: #FAFAFA;
+  color: #1A1A1A;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-serif {
+  font-family: 'Cinzel', serif;
+}

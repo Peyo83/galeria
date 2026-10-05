@@ -1,3 +1,14 @@
+'''
+===============================================================================
+[FICHA GLOBAL]: ENGINE Y SESIÓN ASÍNCRONA DE BASE DE DATOS
+===============================================================================
+• Propósito Principal: Inicializar el Engine de SQLAlchemy usando el driver asyncpg y
+                       proveer un generador de sesiones asíncronas (AsyncSession) por request.
+• Dependencias: postgres:15-alpine (Docker network), variables de entorno (.env).
+• Volumen Creado: Pool de conexiones asíncronas no bloqueante.
+===============================================================================
+'''
+
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker

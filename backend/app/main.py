@@ -1,36 +1,31 @@
-# backend/app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from app.api.v1.api import api_router
 from app.core.config import settings
-from app.api.v1.routers import artworks, chat
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
-# Configuración de CORS estricta preparada para el Frontend SSR en Nuxt 3
+# Servir imágenes optimizadas procesadas (WebP/AVIF)
+app.mount("/media", StaticFiles(directory="media"), name="media")
+
+# CORS adaptado para Nuxt 3 (SSR + Hydration CSR)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Ajustar a dominios específicos en producción
+    allow_origins=settings.CORS_ORIGINS,  # Recomendado usar lista configurable desde Settings
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Registro de Routers de la API
-app.include_router(
-    artworks.router,
-    prefix=f"{settings.API_V1_STR}/artworks",
-    tags=["Artworks & SEO"]
-)
+# Un solo punto de montaje para todos los routers v1
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
-app.include_router(
-    chat.router,
-    prefix=f"{settings.API_V1_STR}/chat",
-    tags=["Conversational AI Agent"]
-)
 
 @app.get("/health", tags=["Infrastructure"])
 async def health_check():
