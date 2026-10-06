@@ -28,6 +28,7 @@ pip-log.txt
 pip-delete-this-directory/
 .pytest_cache/
 .mypy_cache/
+backend/media/
 
 # =============================================================================
 # 4. FRONTEND (NUXT 3 + TYPESCRIPT)

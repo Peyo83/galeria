@@ -1,41 +1,37 @@
 import asyncio
 import logging
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-
-# Asegúrate de importar tu sesión de base de datos y tus modelos reales
 from app.core.database import async_session_maker
-from app.models.user import User  # Ajusta la ruta a tu modelo de usuario real
-from app.core.security import get_password_hash  # Tu función de hasheo con passlib/bcrypt
+from app.models.artwork import User
+from app.core.config import settings  # Tus settings globales con Pydantic
+# Asumiendo que usas passlib para hashear contraseñas:
+from passlib.context import CryptContext
 
-logging.basicConfig(level=logging.INFO)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 logger = logging.getLogger(__name__)
 
-async def create_initial_admin(db: AsyncSession) -> None:
-    # Define tus credenciales iniciales (pueden venir de config/env o hardcodeadas para el bootstrap local)
-    admin_email = "admin@galeria.com"
-    admin_password = "galeria_super_secure_admin_password_2026"
-    
-    # Comprobar si ya existe el usuario admin
-    result = await db.execute(select(User).where(User.email == admin_email))
-    existing_user = result.scalars().first()
-    
-    if not existing_user:
-        user_in = User(
-            email=admin_email,
-            hashed_password=get_password_hash(admin_password),
-            is_active=True,
-            is_superuser=True
-        )
-        db.add(user_in)
-        await db.commit()
-        logger.info(f"✅ Usuario administrador creado exitosamente: {admin_email}")
-    else:
-        logger.info(f"ℹ️ El usuario administrador {admin_email} ya existe en la base de datos.")
-
-async def init() -> None:
+async def create_initial_admin() -> None:
     async with async_session_maker() as session:
-        await create_initial_admin(session)
+        # Credenciales obtenidas de variables de entorno de forma segura
+        admin_email = settings.FIRST_SUPERUSER_EMAIL
+        admin_password = settings.FIRST_SUPERUSER_PASSWORD
+
+        result = await session.execute(select(User).where(User.email == admin_email))
+        existing_user = result.scalars().first()
+
+        if not existing_user:
+            hashed_password = pwd_context.hash(admin_password)
+            user_in = User(
+                email=admin_email,
+                hashed_password=hashed_password,
+                is_active=True
+            )
+            session.add(user_in)
+            await session.commit()
+            logger.info(f"✅ Superusuario inicial creado correctamente: {admin_email}")
+        else:
+            logger.info(f"ℹ️️ El superusuario {admin_email} ya existe en la base de datos.")
 
 if __name__ == "__main__":
-    asyncio.run(init())
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(create_initial_admin())

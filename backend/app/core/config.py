@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
+    # ── Credenciales del Superusuario inicial (leídas del .env) ──
+    FIRST_SUPERUSER_EMAIL: str
+    FIRST_SUPERUSER_PASSWORD: str
+
     # Network & Security (CORS)
     CORS_ORIGINS: List[str]
 

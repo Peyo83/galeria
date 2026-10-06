@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Optional, List
 from enum import Enum
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Numeric, Enum as SQLEnum
+from sqlalchemy import Column, DateTime, Numeric, Enum as SQLEnum
 
 class ArtworkStatus(str, Enum):
     DISPONIBLE = "DISPONIBLE"
@@ -17,7 +17,10 @@ class User(SQLModel, table=True):
     email: str = Field(max_length=255, unique=True, nullable=False) # Eliminado index=True explícito
     hashed_password: str = Field(max_length=255, nullable=False)
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
 
 class Category(SQLModel, table=True):
     __tablename__ = "categories"
@@ -26,7 +29,10 @@ class Category(SQLModel, table=True):
     name: str = Field(max_length=100, unique=True, nullable=False)
     slug: str = Field(max_length=120, unique=True, nullable=False) # Eliminado index=True explícito
     description: Optional[str] = Field(default=None)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
 
     watercolors: List["Watercolor"] = Relationship(back_populates="category")
 
@@ -55,7 +61,13 @@ class Watercolor(SQLModel, table=True):
     )
     
     category_id: Optional[int] = Field(default=None, foreign_key="categories.id", index=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
 
     category: Optional[Category] = Relationship(back_populates="watercolors")
