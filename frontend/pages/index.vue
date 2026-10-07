@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { ArtworkListResponse } from '~/types/artwork'
 
+// ¡Añade esta línea aquí para que la plantilla reconozca config!
 const config = useRuntimeConfig()
 
-// SSR Fetch hacia FastAPI
+// Petición limpia al Server Route interno de Nuxt
 const { data: artworksData, pending, error } = await useFetch<ArtworkListResponse>(
-  `${config.public.apiBase}/artworks`,
+  '/api/artworks',
   {
     lazy: false,
     server: true

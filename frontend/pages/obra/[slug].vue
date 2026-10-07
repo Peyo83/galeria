@@ -3,18 +3,14 @@ import type { ArtworkSEOResponse } from '~/types/artwork'
 
 const route = useRoute()
 const config = useRuntimeConfig()
-const slug = computed(() => route.params.slug as string)
 
-// Data fetching en servidor con re-evaluación reactiva según la ruta
 const { data: artworkPayload, error } = await useFetch<ArtworkSEOResponse>(
-  `/artworks/${slug.value}`,
+  () => `/api/artworks/${route.params.slug}`,
   {
-    baseURL: config.public.apiBase,
-    key: `artwork-detail-${slug.value}`
+    key: `artwork-detail-${route.params.slug}`
   }
 )
 
-// Manejo de errores SSR determinista para Googlebot (404 estricto)
 if (error.value || !artworkPayload.value?.data) {
   throw createError({
     statusCode: 404,
@@ -26,7 +22,6 @@ if (error.value || !artworkPayload.value?.data) {
 const artwork = computed(() => artworkPayload.value!.data)
 const jsonLd = computed(() => artworkPayload.value!.json_ld)
 
-// Inyección de SEO Semántico (OpenGraph, Twitter Cards, Schema.org)
 useHead({
   title: `${artwork.value.title} | Acuarela Original`,
   meta: [
@@ -40,7 +35,6 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      // Se garantiza el escape correcto de caracteres UTF-8 sin deshidratación
       children: computed(() => JSON.stringify(jsonLd.value))
     }
   ]
@@ -48,64 +42,69 @@ useHead({
 </script>
 
 <template>
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <nav aria-label="Navegación secundaria" class="mb-8">
-      <NuxtLink 
-        to="/" 
-        class="inline-flex items-center text-sm text-gallery-muted hover:text-gallery-text transition-colors"
-      >
-        ← Volver a la Galería
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Botón para volver atrás -->
+    <div class="mb-8">
+      <NuxtLink to="/" class="text-sm font-medium text-gallery-muted hover:text-gallery-text transition-colors">
+        ← Volver a la galería
       </NuxtLink>
-    </nav>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-      <!-- Visualizador de la obra con NuxtImg (Optimizado) -->
-      <div class="lg:col-span-7 bg-gallery-card border border-gallery-border p-4 rounded-sm">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+      <!-- Columna de la Imagen -->
+      <div class="bg-gray-100 overflow-hidden shadow-sm border border-gallery-border relative">
         <NuxtImg
-          :src="`${artwork.image_base_path}.webp`"
+          :src="`${config.public.mediaBase}/${artwork.image_base_path}.webp`"
           :alt="artwork.alt_text"
-          provider="none"
-          sizes="sm:100vw md:50vw lg:700px"
-          format="webp"
-          quality="85"
-          loading="eager"
-          fetchpriority="high"
-          class="w-full h-auto object-contain max-h-[80vh] mx-auto"
+          class="w-full h-auto object-cover"
+          priority
         />
+        <div
+          v-if="artwork.status !== 'DISPONIBLE'"
+          class="absolute top-4 right-4 bg-black/75 text-white text-xs px-3 py-1.5 uppercase tracking-wider"
+        >
+          {{ artwork.status === 'RESERVADO' ? 'Reservado' : 'Colección Privada' }}
+        </div>
       </div>
 
-      <!-- Ficha Técnica y Metadatos de la Obra -->
-      <section class="lg:col-span-5 space-y-6">
-        <header class="border-b border-gallery-border pb-4">
-          <h1 class="text-3xl sm:text-4xl font-serif text-gallery-text mb-2 tracking-tight">
+      <!-- Columna de Información y Detalles -->
+      <div class="flex flex-col justify-between">
+        <div>
+          <h1 class="text-3xl sm:text-4xl font-serif text-gallery-text mb-4">
             {{ artwork.title }}
           </h1>
-          <p class="text-xs uppercase tracking-widest text-gallery-muted font-mono">
-            Técnica: Acuarela sobre papel
+          
+          <p v-if="artwork.price" class="text-2xl font-medium text-gallery-text mb-6">
+            {{ artwork.price }} €
           </p>
-        </header>
 
-        <div class="space-y-3 text-sm text-gallery-text">
-          <div v-if="artwork.width_cm && artwork.height_cm" class="flex justify-between py-1 border-b border-gallery-border/40">
-            <span class="text-gallery-muted">Dimensiones</span>
-            <span class="font-medium">{{ artwork.width_cm }} × {{ artwork.height_cm }} cm</span>
+          <div class="border-t border-b border-gallery-border py-6 my-6 space-y-3 text-sm text-gallery-muted">
+            <p v-if="artwork.width_cm && artwork.height_cm">
+              <strong class="text-gallery-text">Dimensiones:</strong> {{ artwork.width_cm }} x {{ artwork.height_cm }} cm
+            </p>
+            <p v-if="artwork.technique">
+              <strong class="text-gallery-text">Técnica:</strong> {{ artwork.technique }}
+            </p>
+            <p v-if="artwork.year">
+              <strong class="text-gallery-text">Año:</strong> {{ artwork.year }}
+            </p>
           </div>
 
-          <div class="flex justify-between py-1 border-b border-gallery-border/40">
-            <span class="text-gallery-muted">Disponibilidad</span>
-            <span class="font-medium capitalize">{{ artwork.status }}</span>
-          </div>
-
-          <div v-if="artwork.price" class="flex justify-between text-base font-semibold pt-2 text-gallery-text">
-            <span>Precio</span>
-            <span>{{ artwork.price }} €</span>
+          <div class="prose prose-stone max-w-none text-gallery-muted mb-8">
+            <p>{{ artwork.description || artwork.alt_text }}</p>
           </div>
         </div>
 
-        <div v-if="artwork.description" class="prose text-gallery-text/80 text-sm leading-relaxed pt-2">
-          <p>{{ artwork.description }}</p>
+        <!-- Botón de acción / contacto -->
+        <div v-if="artwork.status === 'DISPONIBLE'" class="mt-6">
+          <a
+            href="#contacto"
+            class="w-full block text-center bg-gallery-text text-white py-3 px-6 hover:bg-gallery-muted transition-colors uppercase tracking-wider text-sm font-medium"
+          >
+            Consultar sobre esta obra
+          </a>
         </div>
-      </section>
+      </div>
     </div>
   </main>
 </template>
